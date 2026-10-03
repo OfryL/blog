@@ -67,7 +67,7 @@ const FeaturedImage = styled.img`
   max-height: 500px;
   object-fit: cover;
   margin-bottom: ${({ theme }) => theme.spacing.xxl};
-  filter: grayscale(10%) contrast(0.98);
+  filter: var(--image-filter);
 `
 
 const Content = styled.div`

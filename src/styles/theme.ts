@@ -1,14 +1,17 @@
+// Colors are CSS custom properties so the palette can switch with the
+// system color scheme (see GlobalStyles) without re-rendering the tree.
 export const theme = {
   colors: {
-    background: '#fafaf8',
-    surface: '#ffffff',
-    text: '#2c2c2c',
-    textMuted: '#6b6b6b',
-    textLight: '#8a8a8a',
-    border: '#e8e6e3',
-    surfaceMuted: '#f3f1ee',
-    accent: '#a39382',
-    accentHover: '#8b7d6e'
+    background: 'var(--color-background)',
+    surface: 'var(--color-surface)',
+    surfaceMuted: 'var(--color-surface-muted)',
+    text: 'var(--color-text)',
+    textMuted: 'var(--color-text-muted)',
+    textLight: 'var(--color-text-light)',
+    border: 'var(--color-border)',
+    accent: 'var(--color-accent)',
+    accentHover: 'var(--color-accent-hover)',
+    selectionText: 'var(--color-selection-text)'
   },
   fonts: {
     heading: "'Cormorant Garamond', Georgia, serif",
