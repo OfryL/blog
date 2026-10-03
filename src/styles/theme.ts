@@ -6,12 +6,14 @@ export const theme = {
     textMuted: '#6b6b6b',
     textLight: '#8a8a8a',
     border: '#e8e6e3',
+    surfaceMuted: '#f3f1ee',
     accent: '#a39382',
     accentHover: '#8b7d6e'
   },
   fonts: {
     heading: "'Cormorant Garamond', Georgia, serif",
-    body: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
+    body: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+    mono: "'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace"
   },
   spacing: {
     xs: '0.25rem',

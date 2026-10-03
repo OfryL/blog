@@ -93,6 +93,46 @@ const Content = styled.div`
   li {
     margin-bottom: ${({ theme }) => theme.spacing.sm};
   }
+
+  h3 {
+    font-size: 1.5rem;
+    margin: ${({ theme }) => theme.spacing.xl} 0 ${({ theme }) => theme.spacing.md};
+  }
+
+  a {
+    color: ${({ theme }) => theme.colors.accent};
+    border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+
+    &:hover {
+      color: ${({ theme }) => theme.colors.accentHover};
+      border-bottom-color: ${({ theme }) => theme.colors.accentHover};
+    }
+  }
+
+  code {
+    font-family: ${({ theme }) => theme.fonts.mono};
+    font-size: 0.9em;
+    background-color: ${({ theme }) => theme.colors.surfaceMuted};
+    border: 1px solid ${({ theme }) => theme.colors.border};
+    border-radius: 3px;
+    padding: 0.1em 0.35em;
+  }
+
+  pre {
+    margin-bottom: ${({ theme }) => theme.spacing.lg};
+    padding: ${({ theme }) => theme.spacing.md} ${({ theme }) => theme.spacing.lg};
+    background-color: ${({ theme }) => theme.colors.surfaceMuted};
+    border: 1px solid ${({ theme }) => theme.colors.border};
+    overflow-x: auto;
+    line-height: 1.6;
+
+    code {
+      font-size: 0.85rem;
+      background: none;
+      border: none;
+      padding: 0;
+    }
+  }
 `
 
 function formatDate(dateString: string): string {
@@ -104,21 +144,56 @@ function formatDate(dateString: string): string {
   })
 }
 
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+
+function formatInline(text: string): string {
+  const codeSpans: string[] = []
+  let result = escapeHtml(text).replace(/`([^`]+)`/g, (_match, code: string) => {
+    codeSpans.push(`<code>${code}</code>`)
+    return `\uE000${codeSpans.length - 1}\uE000`
+  })
+  result = result
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+  return result.replace(/\uE000(\d+)\uE000/g, (_match, index: string) => codeSpans[Number(index)])
+}
+
 function parseContent(content: string): string {
-  return content
-    .split('\n\n')
-    .map(paragraph => {
-      if (paragraph.startsWith('**') && paragraph.endsWith('**')) {
-        return `<h3>${paragraph.slice(2, -2)}</h3>`
+  const codeBlocks: string[] = []
+  const withoutCode = content.replace(/```([\w-]*)\n([\s\S]*?)```/g, (_match, lang: string, code: string) => {
+    const className = lang ? ` class="language-${lang}"` : ''
+    codeBlocks.push(`<pre><code${className}>${escapeHtml(code.replace(/\n$/, ''))}</code></pre>`)
+    return `\uE001${codeBlocks.length - 1}\uE001`
+  })
+
+  return withoutCode
+    .split(/\n\s*\n/)
+    .map(block => block.trim())
+    .filter(block => block.length > 0)
+    .map(block => {
+      const codeMatch = block.match(/^\uE001(\d+)\uE001$/)
+      if (codeMatch) {
+        return codeBlocks[Number(codeMatch[1])]
       }
-      if (paragraph.startsWith('- ')) {
-        const items = paragraph.split('\n').map(item => `<li>${item.slice(2)}</li>`).join('')
+      const headingMatch = block.match(/^\*\*([^*\n]+)\*\*$/)
+      if (headingMatch) {
+        return `<h3>${escapeHtml(headingMatch[1])}</h3>`
+      }
+      const lines = block.split('\n')
+      if (lines.every(line => line.startsWith('- '))) {
+        const items = lines.map(line => `<li>${formatInline(line.slice(2))}</li>`).join('')
         return `<ul>${items}</ul>`
       }
-      if (paragraph.includes('**')) {
-        paragraph = paragraph.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      if (lines.every(line => /^\d+\.\s/.test(line))) {
+        const items = lines.map(line => `<li>${formatInline(line.replace(/^\d+\.\s/, ''))}</li>`).join('')
+        return `<ol>${items}</ol>`
       }
-      return `<p>${paragraph}</p>`
+      return `<p>${formatInline(block)}</p>`
     })
     .join('')
 }
