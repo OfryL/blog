@@ -1,6 +1,8 @@
 import { useParams, Link, Navigate } from 'react-router-dom'
 import styled from 'styled-components'
-import { articles } from '../data/articles'
+import { findArticle } from '../data/visibility'
+import { DraftTag } from '../components/DraftTag'
+import { useStage } from '../hooks/useStage'
 
 const BackLink = styled(Link)`
   display: inline-flex;
@@ -200,17 +202,21 @@ function parseContent(content: string): string {
 
 export function ArticlePage() {
   const { id } = useParams<{ id: string }>()
-  const article = articles.find(a => a.id === id)
+  const { stage, prefix } = useStage()
+  const article = findArticle(id, stage)
 
   if (!article) {
-    return <Navigate to="/" replace />
+    return <Navigate to={prefix || '/'} replace />
   }
 
   return (
     <article>
-      <BackLink to="/">Back to articles</BackLink>
+      <BackLink to={prefix || '/'}>Back to articles</BackLink>
       <ArticleHeader>
-        <Date dateTime={article.date}>{formatDate(article.date)}</Date>
+        <Date dateTime={article.date}>
+          {formatDate(article.date)}
+          {article.draft && <DraftTag>Draft</DraftTag>}
+        </Date>
         <Title>{article.title}</Title>
         {article.tags && (
           <Tags>

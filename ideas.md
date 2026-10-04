@@ -3,7 +3,8 @@
 A queue of future posts for this blog, each written as a prompt so it can be handed to a writer later
 (a person, a Claude Code session, whatever is around) without re-explaining the blog. Pick an idea,
 paste the **House style** block plus the idea's **Prompt** block into the writer, supply anything listed
-under **Needs from the author**, and the output goes into `src/data/articles.ts` like the existing posts.
+under **Needs from the author**, and the output goes into `src/data/articles.ts` like the existing posts,
+flagged `draft: true` so it shows up on `/stage` for review first.
 
 Ideas are grouped by angle and tagged with a priority:
 
@@ -21,7 +22,8 @@ Use this as the instruction when turning an idea into a post:
 > existing posts in `src/data/articles.ts` first so you do not repeat an anecdote, an opening move, or a
 > closing move they already use. Return the post as one object matching the `Article` type in
 > `src/types/article.ts` (`id`, `title`, `excerpt`, `content`, `date`, `image`, `tags`), with `id` equal
-> to the idea's slug, and add it to the top of the `articles` array. Keep it between 550 and 900 words.
+> to the idea's slug and `draft: true`, and add it to the top of the `articles` array. Keep it between
+> 550 and 900 words.
 > Where the idea lists things it needs from the author, use only what the author actually supplied;
 > if something is missing, leave a clearly marked `[TODO: ...]` rather than inventing it.
 
@@ -60,6 +62,8 @@ Use this as the instruction when turning an idea into a post:
   agents, testing, playwright, telegram, side-projects, tooling, ci, github-actions, career, retrospective,
   build-log, react, vite, self-hosting, macos, security, sso) before inventing a new one.
 - `image`: an Unsplash URL that has been checked to return 200, with `?w=800&q=80&auto=format&fit=crop`.
+- `draft`: `true` until reviewed. Drafts are hidden from the public site and only show under the unlisted
+  `/stage` path (`ofry.net/blog/stage`); remove the flag to publish.
 
 ## Ideas
 

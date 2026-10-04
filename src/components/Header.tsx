@@ -1,5 +1,6 @@
 import styled from 'styled-components'
 import { Link } from 'react-router-dom'
+import { useStage } from '../hooks/useStage'
 
 const HeaderWrapper = styled.header`
   position: relative;
@@ -63,10 +64,12 @@ const Subtitle = styled.p`
 `
 
 export function Header() {
+  const { prefix } = useStage()
+
   return (
     <HeaderWrapper>
       <DarkHint aria-hidden="true">🌙 Best viewed in dark mode</DarkHint>
-      <Logo to="/">
+      <Logo to={prefix || '/'}>
         <Title>Wabi Sabi</Title>
         <Subtitle>The art of imperfect beauty</Subtitle>
       </Logo>

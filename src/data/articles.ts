@@ -57,6 +57,7 @@ The question I should have asked up front was "which one will still be working i
 
 The next step is probably the bot again — just the notify service and the \`online\` boolean, on the Synology that's on anyway. Or I keep refreshing the tab on Thursdays. It's worked so far.`,
     date: '2026-09-29',
+    draft: true,
     image: 'https://images.unsplash.com/photo-1617347454431-f49d7ff5c3b1?w=800&q=80&auto=format&fit=crop',
     tags: ['telegram', 'chrome-extension', 'side-projects', 'tooling']
   },
@@ -104,6 +105,7 @@ The agent will also change under you with no changelog. The only defense I know 
 
 I still haven't got all four runs to draw "hello" the same way. The barcode is still on the screen.`,
     date: '2026-09-02',
+    draft: true,
     image: 'https://images.unsplash.com/photo-1761496847215-46592435aab0?w=800&q=80&auto=format&fit=crop',
     tags: ['mcp', 'agents', 'llm', 'evaluation']
   },
@@ -144,6 +146,7 @@ The catch is that undo only helps if somebody noticed. Nobody reverts a deploy t
 
 So the one rule I carry over from the bench: before you ship the thing, decide how you'll know it's broken. I don't always follow it. The Wolt checker extension still narrates every step of its restaurant-status detection to the console — restaurant detected as open, found the schedule button — exactly as it did the night I plugged it in and watched it work. Watching it work is the easy part. The capacitor would point out that's the wrong thing to be watching for.`,
     date: '2026-08-09',
+    draft: true,
     image: 'https://images.unsplash.com/photo-1521798604188-0d6595d6d6ae?w=800&q=80&auto=format&fit=crop',
     tags: ['hardware', 'testing', 'opinion']
   },
@@ -209,6 +212,7 @@ I keep exactly one spec that hits the real model. It's tagged \`@live\`, the PR 
 
 What I haven't solved is drift: a fixture recorded in March is a faithful picture of March. I have half a plan to make the live run diff its response shape against the newest fixture and open an issue when they disagree. Until then the March fixture is the March model, and I re-record when the diff tells me to.`,
     date: '2026-07-15',
+    draft: true,
     image: 'https://images.unsplash.com/photo-1762776531550-b7baa9bcf361?w=800&q=80&auto=format&fit=crop',
     tags: ['playwright', 'testing', 'llm']
   },
@@ -240,6 +244,7 @@ What changed is the sender. Back then it was me on a phone typing a command. Now
 
 There's probably still an ESP8266 in a drawer somewhere. If I ever find the old sketch on whatever laptop it's on, I'll flash it and see if the chip still answers "hi". My bet is that it does, and then crashes on the first long message.`,
     date: '2026-06-21',
+    draft: true,
     image: 'https://images.unsplash.com/photo-1634452015397-ad0686a2ae2d?w=800&q=80&auto=format&fit=crop',
     tags: ['esp8266', 'telegram', 'hardware', 'side-projects']
   },
@@ -288,6 +293,7 @@ The ones I remember fighting with wanted more than that. A second feature wants 
 
 At work I spend a lot of time on tool surface area — what an MCP server should expose, what an agent actually needs versus what's easy to bolt on. Same question, different pile of parts. I still have the BotFather chat open. There's almost certainly another one coming.`,
     date: '2026-05-27',
+    draft: true,
     image: 'https://images.unsplash.com/photo-1662974770404-468fd9660389?w=800&q=80&auto=format&fit=crop',
     tags: ['telegram', 'side-projects', 'retrospective']
   },
@@ -349,6 +355,7 @@ Every CI optimization thread I've seen starts with someone proposing a cache cha
 
 So export first and look at the numbers. And keep the export tool stupid: one flat file, no dashboard with hardcoded job names. Workflows get renamed and merged every time someone reorganizes a repo; a row with a repo name and two timestamps survives all of that. The 2021 script has outlived the pipelines it was written for and still runs unchanged on my laptop, page-0 bug and all.`,
     date: '2026-05-03',
+    draft: true,
     image: 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=800&q=80&auto=format&fit=crop',
     tags: ['github-actions', 'ci', 'tooling']
   },
@@ -388,6 +395,7 @@ If I started from an empty repo tomorrow I wouldn't try to write less ugly code.
 
 I still get the itch to write the generic version. These days I write the specific one, leave a comment where the seam would go, and wait to see if anyone ever needs it. Mostly nobody does.`,
     date: '2026-04-08',
+    draft: true,
     image: 'https://images.unsplash.com/photo-1499744349893-0c6de53516e6?w=800&q=80&auto=format&fit=crop',
     tags: ['autofleet', 'career', 'architecture', 'retrospective']
   },
@@ -438,6 +446,7 @@ The repo got listed on pulsemcp and mcpservers.org, next to cloud APIs. People I
 
 The fix isn't mysterious. Rename one method, wrap the schemas, return \`content\`, answer \`initialize\`, and the websocat line in the README stops being a lie. It's a weekend. The board still has one commit, and a model can still draw a rectangle on it, which was the point.`,
     date: '2026-03-01',
+    draft: true,
     image: 'https://images.unsplash.com/photo-1789036069459-f1a0c50739a6?w=800&q=80&auto=format&fit=crop',
     tags: ['esp32', 'mcp', 'build-log', 'hardware']
   },
@@ -485,6 +494,7 @@ The five ceramics posts come out as real ones go in. This post cost one commit a
 
 **Update, October 2026:** the renderer escapes now and supports code blocks, inline code and links. Dark mode landed the same day, and the deploy workflow finally copies index.html to 404.html, so deep links load.`,
     date: '2026-01-14',
+    draft: true,
     image: 'https://images.unsplash.com/photo-1751810106063-788098f33bf2?w=800&q=80&auto=format&fit=crop',
     tags: ['react', 'vite', 'github-pages', 'build-log']
   },
