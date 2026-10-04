@@ -272,7 +272,7 @@ A bot with exactly one user also needs barely any security model, which is a big
 
 **The ones that exist because a website was too far away**
 
-utcnowbot replies with the current UTC time, and does nothing else. hebTranslateBot translates to and from Hebrew. ForecastBot, from 2023, gives me the wave forecast for the Israeli coast, so whether it's worth getting up early gets answered in a chat instead of a browser tab. There's a fork of a Wolt checker bot that tells you when a restaurant opens or starts delivering - a problem that only matters when you're hungry, and matters a lot right then. There's also one for a Telegram game I'm not going to explain.
+utcnowbot replies with the current UTC time, and does nothing else. hebTranslateBot translates to and from Hebrew. ForecastBot, from 2023, gives me the wave forecast for the Israeli coast, so whether it's worth getting up early gets answered in a chat instead of a browser tab. There's a fork of a Wolt checker bot that tells you when a restaurant opens or starts delivering - a problem that only matters when you're hungry, and matters a lot right then. There's also a Snake bot. Telegram has a games platform, and Snake was the smallest game I could think of to find out what it took.
 
 I could defend each of these as a product. I won't. They exist because writing a bot took less time than finding the right website and remembering to open it, and because a bot shows up in the same place my messages do.
 
@@ -298,14 +298,90 @@ At work I spend a lot of time on tool surface area - what an MCP server should e
     tags: ['telegram', 'side-projects', 'retrospective']
   },
   {
+    id: 'autofleet-what-survived-four-years',
+    title: 'What Survived Four Years at Autofleet',
+    excerpt: 'Four years of building Autofleet\'s platform from zero. Looking back at which early decisions held up, the split wasn\'t the one I\'d have guessed.',
+    content: `I joined Autofleet in 2020 as a founding engineer, when the platform didn't exist yet. React and Node on GCP, an empty repo, and a lot to build.
+
+By 2024, when Element Fleet Management acquired the company, I'd watched four years of that code grow: some of it rewritten, most of it extended. Afterwards I did what I do with anything that has been running for a while, and took it apart in my head to see which parts had held. The answer wasn't the one I'd have predicted.
+
+One caveat. That codebase belongs to someone else now, so I won't describe actual services or specific decisions. What I can describe is the shape of what lasted and the shape of what didn't, because I keep running into the same shapes in every codebase since.
+
+**What held**
+
+The plain data model. Anything that simply described the world as it was, what a vehicle is and when something happened to it, barely changed in character over four years. It got added to. It didn't get replaced. Every clever thing built later sat on top of it, and when a clever thing was removed, the plain layer underneath stayed.
+
+The line between reacting and thinking. A fleet platform has two very different jobs: respond to what vehicles are doing right now, and spend a while on an optimization problem. They have different performance needs and don't belong in the same loop. Where that line was drawn clearly, either side could be swapped out without the other noticing. It costs almost nothing to draw early and a lot to draw late, and it's the first thing I look for now when I open a codebase I didn't write.
+
+The boring stack. React, Node and GCP weren't an interesting choice in 2020, and they were still the stack four years later. I spent most of my energy on the product and almost none on the stack, which is roughly what you want from a stack.
+
+**What didn't**
+
+Abstractions for things that hadn't happened yet. I'll own this one. I had a habit, stronger in 2020 than now, of building the generic version because I could imagine a case the specific one wouldn't handle. The imagined case is always vivid, and the code built for it always looks clean, because nobody has used it. Then every real change has to go through a layer that serves exactly one implementation. I've removed enough of my own layers like that to recognize the pattern early now.
+
+Anything only I understood. Setup that lived in my head, config that was correct only if you knew why. That works for a weekend project. On a platform other people have to run, it gets replaced sooner or later, and the replacement is always simpler and better.
+
+**The pattern**
+
+I kept looking for a more flattering lesson than "the simple parts lasted", and from every angle, that's the lesson.
+
+If I started from an empty repo tomorrow, I wouldn't try to write more polished code. The early, unpolished code mostly held. I'd draw the reacting-versus-thinking line on day one, because that's when it's cheap. I'd be slower to build for a client I'd only imagined. And I'd write down the things only I knew while I still remembered why.
+
+I still get the itch to write the generic version. These days I write the specific one, leave a comment where the seam would go, and wait to see if anyone needs it. Mostly nobody does.`,
+    date: '2026-04-08',
+    draft: true,
+    image: 'https://images.unsplash.com/photo-1499744349893-0c6de53516e6?w=800&q=80&auto=format&fit=crop',
+    tags: ['autofleet', 'career', 'architecture', 'retrospective']
+  },
+  {
+    id: 'esp-cyd-mcp-build-log',
+    title: 'Giving an LLM a Screen',
+    excerpt: 'I put an MCP server on a cheap ESP32 display so a model could draw on it. The interesting part wasn\'t the pixels, it was deciding what a tool should refuse to do.',
+    content: `A model calls \`display.rectangle\`, and a rectangle shows up on a 2.8-inch screen on my desk that cost less than lunch. That's [esp-cyd-mcp](https://github.com/OfryL/esp-cyd-mcp): firmware for the ESP32 "Cheap Yellow Display" that turns the board into an MCP server, so an LLM gets a screen, a touch panel, a few GPIO pins and a tiny speaker as tools.
+
+The repo has one commit, \`init\`, and nothing since. The protocol handling in it is wrong in enough places that a real desktop host can't finish the handshake, and only the two example clients in the repo can talk to it. I'm not going to walk through the bugs. What stuck with me was what the board taught me about tools, and that part doesn't depend on the firmware being right.
+
+**A tool is a promise about the world**
+
+An API for a cloud service can be sloppy and nobody dies. An API for a chip is different, because the caller can physically break something. The display's SPI bus and its chip-select lines are the obvious example: write the wrong pin and the screen stops listening to its own driver. So \`gpio.pinMode\` has a fixed list of pins it's willing to touch and refuses everything else with a plain message.
+
+That refusal is the most useful line in the firmware. A model will try things. The question isn't whether to let it, it's whether the tool says no clearly enough that the model can try something else.
+
+**Names over flags**
+
+The display tools are \`display.rectangle\` and \`display.fillRectangle\`, not one tool with a \`fill\` boolean. The same for outline and fill circles. A flag is the kind of argument a model drops when it's busy thinking about something else. A tool name is harder to forget, and a wrong tool name fails loudly instead of drawing the wrong shape.
+
+**Errors belong to the model**
+
+Every handler in the \`init\` commit returns something like \`{"success": false, "error": "Buzzer is disabled"}\`. A host doesn't know what to do with that, so it gets passed along as a mystery, if at all.
+
+MCP splits errors in two. Protocol errors go back as JSON-RPC errors, and the host keeps those for itself. Tool failures go back as a normal result, marked as an error, with text the model can read. The difference matters more than I expected: "Buzzer is disabled. Call audio.enable first, then retry" is an instruction the model can act on, on its own, without me in the loop. That is the whole point of giving it a tool rather than a button.
+
+**The description is the interface**
+
+The host checks arguments against the schema. The model mostly reads the description string. Mine for \`audio.tone\` says \`Duration in ms (0 = continuous)\` and leaves it to the model to discover that there's a \`stopTone\` tool, and says nothing about the fact that a long tone blocks the board until it finishes, because that little amp runs in the same loop as everything else.
+
+A tool description written for the person who built the board is useless to a model that has never seen it. The repo got listed on a couple of MCP directories, next to cloud APIs, so people I'll never meet are flashing my one commit and letting a model loose on their GPIO pins. Every description has to say what the tool refuses to do, for a reader who has only the description.
+
+**What carried over**
+
+Those two rules, refuse clearly and return errors the model can read, are the ones I took into the MCP servers I build at work, where the hosts are real and the handshake has to finish.
+
+Fixing the firmware is a weekend. The board still has one commit, and a model can still draw a rectangle on it, which was the point.`,
+    date: '2026-03-01',
+    draft: true,
+    image: 'https://images.unsplash.com/photo-1789036069459-f1a0c50739a6?w=800&q=80&auto=format&fit=crop',
+    tags: ['esp32', 'mcp', 'build-log', 'hardware']
+  },
+  {
     id: 'export-github-actions-runs-org-wide',
     title: 'The Whole Org\'s CI in One JSON File',
-    excerpt: 'The GitHub UI shows one repo at a time, useless when "CI is slow" spans more repos than fit on a screen. I dusted off gh-actions-hp to dump every repo\'s recent runs into one file and look before touching a cache key.',
-    content: `Eleven browser tabs, every one a different repo's Actions page, and I still couldn't answer the one-line question from the team channel: was CI actually slower this week, or did it just feel that way?
+    excerpt: 'The GitHub UI shows one repo at a time, useless when "CI is slow" spans more repos than fit on a screen. So I wrote gh-actions-hp to dump every repo\'s recent runs into one JSON file and look before touching a cache key.',
+    content: `Eleven browser tabs, every one a different repo's Actions page, and I still couldn't answer the one-line question from the team channel: is CI actually slower this week, or does it just feel that way?
 
-The GitHub UI is built for one repo and one workflow at a time. It falls apart when you own E2E testing and code quality for a team and the pipelines are spread across more repos than fit on one screen, each with its own E2E job.
+The GitHub UI is built for one repo and one workflow at a time. It falls apart once the pipelines are spread across more repos than fit on one screen, each with its own test job and its own idea of what "slow" means.
 
-So I went back to a script I wrote in 2021, [gh-actions-hp](https://github.com/OfryL/gh-actions-hp). The README still calls it a "Github oragnization level actions fetcher", typo included, and I'm leaving it. It does one thing: walk every repo in an org, pull the recent workflow runs for each, and dump it all into one JSON file.
+So I wrote a script: [gh-actions-hp](https://github.com/OfryL/gh-actions-hp). The README calls it a "Github oragnization level actions fetcher", typo included. It does one thing: walk every repo in an org, pull the recent workflow runs for each, and dump it all into one JSON file.
 
 **The API underneath**
 
@@ -323,7 +399,7 @@ while (res && res.length !== 0) {
 }
 \`\`\`
 
-Pagination first: you loop on \`page\` until the endpoint returns an empty array. Mine starts counting at 0, which GitHub treats as page 1, so the first hundred repos come back twice - and any of them with zero runs lands in the \`noFlows\` list twice. I noticed that while writing this post. It's been there for four and a half years, and it's going to stay there a little longer.
+Pagination first: you loop on \`page\` until the endpoint returns an empty array. Mine starts counting at 0, which GitHub treats as page 1, so the first hundred repos come back twice, and any of them with zero runs lands in the \`noFlows\` list twice. I noticed that while writing this post. It's harmless for what I use it for, so it's staying for now.
 
 Then rate limits. An authenticated token gets 5,000 requests an hour, which sounds like plenty until you hit every repo in parallel and trip the secondary limits instead. The script awaits each repo in sequence. It's slow, and it finishes.
 
@@ -337,13 +413,13 @@ A token that can read Actions on the org's repos, the org name, and nothing else
 
 There's no duration field in the list response. There is a per-run \`/timing\` endpoint that returns \`run_duration_ms\`, but that's one more call per row, so I subtract \`run_started_at\` from \`updated_at\` and call it close enough. \`jq '[.repoToWorkflows[][]]' actions.json\` flattens the nesting, and from there it's a CSV away from Sheets.
 
-Caveat: \`WORKFLOWS_PER_REPO\` is a constant, set to 10, and the script doesn't paginate runs - so "for entire organization" in the repo description promises more than ten runs per repo delivers. For a real audit you bump it to 100 and run it nightly. Paginating the runs properly, and writing the duration into the row so I stop doing subtraction in a spreadsheet, is the obvious next fix; it's been obvious since 2021. The nightly half already exists in the repo: a GitHub Action that fetches GitHub Actions on a 00:05 cron, still at ten runs per repo, builds a small antd table over the result and uploads it as an artifact. That amused me more than it should. It also pins Node 14.15.5 and \`upload-artifact@v2\`, so I doubt it would run today. It did in 2021.
+Caveat: \`WORKFLOWS_PER_REPO\` is a constant, set to 10, and the script doesn't paginate runs, so "for entire organization" in the repo description promises more than ten runs per repo delivers. For a real audit you bump it to 100 and run it nightly. Paginating the runs properly, and writing the duration into the row so I stop doing subtraction in a spreadsheet, is the obvious next fix. The nightly half already exists in the repo: a GitHub Action that fetches GitHub Actions on a 00:05 cron, builds a small antd table over the result, and uploads it with \`upload-artifact@v2\`. A workflow whose job is to report on workflows amused me more than it should.
 
 **What a flat file shows you**
 
-I'll skip our numbers, but the pattern is the same everywhere I've run this.
+I'll skip our numbers, but the pattern will probably look familiar.
 
-Sort by duration, descending. The top of the list is rarely the suite everyone blames. The E2E job is long, but predictably so, and people have made peace with it. The real outliers are rows with \`run_attempt\` greater than 1 - someone hit "re-run all jobs" on a twenty-minute pipeline because one flaky step failed, and the whole thing ran again, build included. The row only shows the last attempt, so whatever you see, the real cost is more. Filter on that column and the cost of flakiness becomes a number you can put next to the cost of fixing the flaky test.
+Sort by duration, descending. The top of the list is rarely the suite everyone blames. The E2E job is long, but predictably so, and people have made peace with it. The real outliers are rows with \`run_attempt\` greater than 1: someone hit "re-run all jobs" on a twenty-minute pipeline because one flaky step failed, and the whole thing ran again, build included. The row only shows the last attempt, so whatever you see, the real cost is more. Filter on that column and the cost of flakiness becomes a number you can put next to the cost of fixing the flaky test.
 
 The other thing you see is drift: the same workflow name in six repos with wildly different timings, because each copy got tweaked by whoever touched it last and nobody compared them.
 
@@ -351,103 +427,12 @@ As for the question in the channel: not slower. Two re-runs louder, which feels 
 
 **Measure first, keep it dumb**
 
-Every CI optimization thread I've seen starts with someone proposing a cache change for the job they personally wait on. Sometimes it's the cache. Usually it wasn't, and the afternoon goes to tuning something that was fine.
+Every CI optimization thread I've seen starts with someone proposing a cache change for the job they personally wait on. Sometimes it's the cache. Usually it isn't, and the afternoon goes to tuning something that was fine.
 
-So export first and look at the numbers. And keep the export tool stupid: one flat file, no dashboard with hardcoded job names. Workflows get renamed and merged every time someone reorganizes a repo; a row with a repo name and two timestamps survives all of that. The 2021 script has outlived the pipelines it was written for and still runs unchanged on my laptop, page-0 bug and all.`,
-    date: '2026-05-03',
+So export first and look at the numbers. And keep the export tool stupid: one flat file, no dashboard with hardcoded job names. Workflows get renamed and merged every time someone reorganizes a repo; a row with a repo name and two timestamps survives all of that. Next time the channel asks, the answer is one \`node index.js\` away, page-0 bug and all.`,
+    date: '2021-11-14',
     draft: true,
     image: 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=800&q=80&auto=format&fit=crop',
     tags: ['github-actions', 'ci', 'tooling']
-  },
-  {
-    id: 'autofleet-what-survived-four-years',
-    title: 'What Survived Four Years at Autofleet',
-    excerpt: 'I spent four years building Autofleet\'s platform from zero. Looking back at which early decisions held up and which didn\'t, the split wasn\'t the one I\'d have guessed.',
-    content: `I joined Autofleet in 2020 as a founding engineer, and the platform I was there to build didn't exist yet. React and Node on GCP, and a lot of empty.
-
-I wrote the first version fast, with the kind of confidence you only have before anyone else has read your code. I'm not proud of all of it. Most of it did its job.
-
-By 2024, when Element Fleet Management acquired the company, I'd watched four years of that code grow up - some of it rewritten, some of it just added to. Afterwards I did what I do with anything old: took it apart in my head to see which parts had held. I'd have bet on the wrong ones.
-
-One caveat before the list. That codebase belongs to someone else now, so I'm not going to describe actual services, name actual functions, or tell war stories about particular weeks. What I can describe is the shape of what lasted and the shape of what didn't, because I keep running into the same shapes in every codebase since.
-
-**What held**
-
-The boring data. Anything that just described the world as it was - what a vehicle is and when something happened to it - barely changed in character over four years. It got added to. It didn't get replaced. Every clever thing built later sat on top of it, and when a clever thing was removed, the plain stuff underneath stayed where it was.
-
-The line between reacting and thinking. A fleet platform has two very different jobs: respond to what vehicles are doing right now, and sit for a while chewing on an optimization problem. Those have different performance needs, and they don't belong in the same loop. Where that line is drawn clearly, things on either side of it can be swapped out without the other side caring. It's the kind of boundary that costs almost nothing to draw early and a lot to draw late, and it's the first thing I look for now when I open a codebase I didn't write.
-
-The boring stack. React, Node and GCP weren't an interesting choice in 2020, and nobody has ever cornered me at a meetup to ask about them. They were still the stack four years later. I spent most of my energy in those years on things more interesting than the stack and almost none of it on the stack itself, which is roughly what you want from a stack.
-
-**What didn't**
-
-Abstractions for things that hadn't happened yet. This one I'll own fully. I have a tendency, and I had it worse in 2020, to build the generic version of something because I can imagine a case the specific version wouldn't handle. The imagined case is always vivid. Code built for it always looks clean, because nobody has used it. Then every real change has to go through a layer of indirection that serves exactly one implementation. I've deleted enough of my own layers like that to recognize the smell now, usually while I'm still writing it.
-
-Anything only I understood. Setup that lived in my head, config that was correct only if you knew why. That's fine for a weekend Telegram bot, where the second person never shows up. On a platform other people have to run, it gets replaced sooner or later, and the replacement is always duller and better.
-
-**The pattern**
-
-I'd have liked to put my first pass at anything "live" on that second list. Pushing real-time updates to a client is the part everyone's excited about on day one, me included, and first versions of live things are the versions I trust least. But I can't honestly say I watched that one get replaced, and guessing isn't the same as knowing, so it stays off.
-
-I keep wanting there to be a more flattering lesson than "the boring stuff stayed", but I've looked at it from a few angles and that's the lesson.
-
-If I started from an empty repo tomorrow I wouldn't try to write less ugly code. The ugly early code mostly held. I'd draw the reacting-versus-thinking line on day one, because that's when it's cheap. I'd be slower to build for a client I'd only imagined. And I'd write down the things only I knew while I still remembered why.
-
-I still get the itch to write the generic version. These days I write the specific one, leave a comment where the seam would go, and wait to see if anyone ever needs it. Mostly nobody does.`,
-    date: '2026-04-08',
-    draft: true,
-    image: 'https://images.unsplash.com/photo-1499744349893-0c6de53516e6?w=800&q=80&auto=format&fit=crop',
-    tags: ['autofleet', 'career', 'architecture', 'retrospective']
-  },
-  {
-    id: 'esp-cyd-mcp-build-log',
-    title: 'Giving an LLM a Screen',
-    excerpt: 'I put an MCP server on a cheap ESP32 display so a model could draw on it. The code on GitHub still gets the protocol wrong in four places, and each one taught me something about tools.',
-    content: `esp-cyd-mcp is firmware for the ESP32-2432S028R - the "Cheap Yellow Display" - that turns a 2.8-inch board into an MCP server. A model calls \`display.rectangle\` and a rectangle shows up on a screen that costs less than lunch. The repo has one commit, \`init\`, and nothing since. Most of what follows is what that commit gets wrong, because that turned out to be the part worth writing down.
-
-**Why WebSocket, when MCP doesn't do WebSocket**
-
-The board is an ESP32 with an ILI9341 240x320 panel, an XPT2046 resistive touch controller, an SD slot, and a small audio amp behind a two-pin speaker connector on GPIO 26. \`config.h\` calls that pin \`BUZZER_PIN\`, so that's what the audio tools call it too.
-
-MCP's standard transports are stdio and Streamable HTTP. stdio wants a process the host can spawn, which rules out a chip on the far end of a Wi-Fi link. Streamable HTTP would've worked - sessions and streaming are optional in the spec, and ESP32s serve HTTP all day. The firmware even runs an \`AsyncWebServer\` on port 3000 next to the WebSocket, answering \`GET /tools\`. But WebSockets were something I'd used plenty, the links2004 library was right there, and JSON-RPC over port 3001 was the shortest path to pixels. That's the whole reason.
-
-The cost is that a desktop host can't open \`ws://\`. The README has a Claude Desktop config that pipes \`websocat\` into the socket. It doesn't work, and not because of websocat: a real host sends \`initialize\` first, and this firmware answers \`-32601 Method not found\` to anything but \`tools/list\` or \`tools/invoke\`. The handshake never finishes. The only clients that work are the two in \`examples/\` - a Python script and an HTML page - written to speak whatever the board speaks.
-
-**Tools, roughly in the order I built them**
-
-Roughly: display, then touch, GPIO, sensors and files, audio last. Display makes sense to start with because a wrong rectangle is obvious: \`display.clear\`, \`display.text\`, \`display.line\`, \`display.rectangle\`, \`display.fillRectangle\`, \`display.circle\`. Outline and fill are separate tools on purpose - a \`fill\` boolean is the kind of argument a model drops, and a tool name is harder to forget than a flag.
-
-GPIO is the one with a refusal built in. The display's SPI bus and the three chip-select lines are off-limits: \`gpio.pinMode\` has a fixed list of pins it's willing to touch and answers "Pin not available or reserved" for everything else. Without that, a \`gpio.digitalWrite\` to pin 15 yanks the display's chip select and the screen stops listening to its own driver.
-
-Audio is where the board pushes back. \`audio.tone\` with a \`duration\` does a blocking \`delay()\` while it sings, inside the same task that services the WebSocket, so a long tone makes the board deaf until it finishes. Melodies - \`audio.playMelody\`, by name or as an RTTTL string - are stepped through from \`loop()\` instead. That's the right design, and why the two tools look nothing alike inside.
-
-**What a real host would reject**
-
-Here's the list, and none of it is subtle. The firmware on GitHub dispatches \`tools/invoke\`, a method MCP doesn't have - it's \`tools/call\`. It marks arguments with \`required: true\` inside each property instead of a JSON Schema \`required\` array, and the "schema" has no \`type: "object"\` wrapper, just a flat map of fields. It reads the request \`id\` as a string, so a numeric id - which most hosts send - comes back empty, a reply to a request nobody made. And every handler returns a bare object like \`{"success": true}\` instead of MCP's \`content\` array.
-
-That last one is the mistake that mattered. Here's what the board sends for a tone with the buzzer disabled, and what I'd write today:
-
-\`\`\`json
-{"jsonrpc":"2.0","id":"7","result":{"success":false,"error":"Buzzer is disabled"}}
-
-{"jsonrpc":"2.0","id":"7","result":{
-  "isError":true,
-  "content":[{"type":"text","text":"Buzzer is disabled. Call audio.enable with enabled=true, then retry."}]
-}}
-\`\`\`
-
-A host has no idea what to do with the first. The second it hands straight to the model, which calls \`audio.enable\` and retries. Protocol errors belong in a JSON-RPC \`error\` the host keeps for itself. Tool failures belong in a result the model can read, because the model is the one who can fix them.
-
-The board also made me notice which half of a tool definition the model actually reads. The host checks arguments against the schema; the model mostly goes by the description string. Mine says \`Duration in ms (0 = continuous)\` and leaves the model to discover \`audio.stopTone\` on its own - and says nothing about what that little amp can and can't reproduce.
-
-**Strangers with the same board**
-
-The repo got listed on pulsemcp and mcpservers.org, next to cloud APIs. People I'll never meet are flashing my \`init\` commit onto their own yellow display and letting a model loose on their GPIO pins, so every description has to say what the tool refuses to do, for a reader who's never seen the board. That rule, and errors as results, are the two things I carried into the MCP servers I build at work, where the hosts are real and the handshake has to finish.
-
-The fix isn't mysterious. Rename one method, wrap the schemas, return \`content\`, answer \`initialize\`, and the websocat line in the README stops being a lie. It's a weekend. The board still has one commit, and a model can still draw a rectangle on it, which was the point.`,
-    date: '2026-03-01',
-    draft: true,
-    image: 'https://images.unsplash.com/photo-1789036069459-f1a0c50739a6?w=800&q=80&auto=format&fit=crop',
-    tags: ['esp32', 'mcp', 'build-log', 'hardware']
   }
 ]
