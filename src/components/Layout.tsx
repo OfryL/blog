@@ -1,6 +1,8 @@
 import styled from 'styled-components'
 import type { ReactNode } from 'react'
 import { Header } from './Header'
+import { StageBanner } from './StageBanner'
+import { useStage } from '../hooks/useStage'
 
 const Main = styled.main`
   max-width: 900px;
@@ -27,8 +29,11 @@ interface LayoutProps {
 }
 
 export function Layout({ children }: LayoutProps) {
+  const { stage } = useStage()
+
   return (
     <>
+      {stage && <StageBanner />}
       <Header />
       <Main>{children}</Main>
       <Footer>

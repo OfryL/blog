@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 
 const BASE_PATH = import.meta.env.BASE_URL
 import { ThemeProvider } from 'styled-components'
@@ -17,6 +17,10 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/article/:id" element={<ArticlePage />} />
+            {/* Unlisted review path: same pages, drafts included */}
+            <Route path="/stage" element={<Home />} />
+            <Route path="/stage/article/:id" element={<ArticlePage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Layout>
       </BrowserRouter>

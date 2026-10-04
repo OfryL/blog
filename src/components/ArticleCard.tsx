@@ -1,6 +1,8 @@
 import styled from 'styled-components'
 import { Link } from 'react-router-dom'
 import type { Article } from '../types/article'
+import { DraftTag } from './DraftTag'
+import { useStage } from '../hooks/useStage'
 
 const Card = styled.article`
   display: grid;
@@ -28,11 +30,11 @@ const Image = styled.img`
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: grayscale(20%) contrast(0.95);
+  filter: var(--image-filter);
   transition: all ${({ theme }) => theme.transitions.default};
 
   &:hover {
-    filter: grayscale(0%) contrast(1);
+    filter: var(--image-filter-hover);
     transform: scale(1.02);
   }
 `
@@ -126,22 +128,28 @@ function formatDate(dateString: string): string {
 }
 
 export function ArticleCard({ article }: ArticleCardProps) {
+  const { prefix } = useStage()
+  const href = `${prefix}/article/${article.id}`
+
   return (
     <Card>
       {article.image && (
         <ImageContainer>
-          <Link to={`/article/${article.id}`}>
+          <Link to={href}>
             <Image src={article.image} alt={article.title} loading="lazy" />
           </Link>
         </ImageContainer>
       )}
       <Content>
-        <Date dateTime={article.date}>{formatDate(article.date)}</Date>
-        <Link to={`/article/${article.id}`}>
+        <Date dateTime={article.date}>
+          {formatDate(article.date)}
+          {article.draft && <DraftTag>Draft</DraftTag>}
+        </Date>
+        <Link to={href}>
           <Title>{article.title}</Title>
         </Link>
         <Excerpt>{article.excerpt}</Excerpt>
-        <ReadMore to={`/article/${article.id}`}>Read more</ReadMore>
+        <ReadMore to={href}>Read more</ReadMore>
         {article.tags && (
           <Tags>
             {article.tags.map(tag => (
