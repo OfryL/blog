@@ -41,6 +41,7 @@ Use this as the instruction when turning an idea into a post:
 - No generic blog prose: no "in today's fast-paced world", no "delve", no "game-changer", no "journey",
   no tidy triads for their own sake, no "it's not X, it's Y", no rhetorical questions, no motivational
   ending, no closing paragraph that restates the post.
+- Dashes are the short en dash with spaces around it (`word – word`), never the long em dash (—).
 - Open with something specific (a scene, a failure, an object on the desk). End grounded: a takeaway,
   a next step, or an admission. Never end on a question to the reader.
 - Never invent numbers, dates, names, quotes, or "I did" claims. If a detail is not in the idea or
