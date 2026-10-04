@@ -26,6 +26,9 @@ jobs:
 
       - run: npm ci
       - run: npm run build
+      # GitHub Pages serves 404.html for unknown paths; serving the app there
+      # lets deep links like /blog/article/<id> load instead of a bare 404.
+      - run: cp dist/index.html dist/404.html
 
       - uses: actions/upload-pages-artifact@v3
         with:
